@@ -1,7 +1,9 @@
-import { appendFile, mkdir, rename, rm, stat } from 'node:fs/promises';
+import { fsp } from './fs';
 import path from 'node:path';
 import type { LogLevel } from '../../shared/settings';
 import { isNotFound } from './fs-utils';
+
+const { appendFile, mkdir, rename, rm, stat } = fsp;
 
 const LEVEL_ORDER: Record<LogLevel, number> = { error: 0, warn: 1, info: 2, debug: 3 };
 

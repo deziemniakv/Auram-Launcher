@@ -45,6 +45,13 @@ test('installs a verified release and launches it', async () => {
     await expect(window.getByText('Up to date')).toBeVisible();
     await window.getByText(/Release notes · 1\.0\.0/).click();
     await expect(window.getByText('Second line', { exact: false })).toBeVisible();
+
+    // Uninstalling removes the files, including resources/app.asar.
+    await go(window, 'Applications');
+    await card.getByRole('button', { name: 'Uninstall…' }).click();
+    await window.getByRole('dialog').getByRole('button', { name: 'Uninstall' }).click();
+    await expect(window.getByText('Auram Photo uninstalled')).toBeVisible();
+    expect(await readdir(sandbox.appsDir)).toEqual([]);
   } finally {
     await app.close();
   }

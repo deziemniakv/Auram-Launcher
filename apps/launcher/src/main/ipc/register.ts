@@ -1,5 +1,5 @@
 import { dialog, shell, type BrowserWindow } from 'electron';
-import { mkdir } from 'node:fs/promises';
+import { fsp } from '../services/fs';
 import { z } from 'zod';
 import { AppIdSchema } from '@auram/app-manifest';
 import {
@@ -18,6 +18,8 @@ import type { ProjectsService } from '../services/projects-service';
 import type { SettingsService } from '../services/settings-service';
 import { isAllowedExternalUrl } from '../security';
 import { handle } from './handle';
+
+const { mkdir } = fsp;
 
 export interface IpcContext {
   logger: Logger;

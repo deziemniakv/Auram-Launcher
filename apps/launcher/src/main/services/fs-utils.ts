@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, open, readFile, rename, rm, stat } from 'node:fs/promises';
+import { fsp } from './fs';
 import path from 'node:path';
+
+const { mkdir, open, readFile, rename, rm, stat } = fsp;
 
 const RETRYABLE = new Set(['EPERM', 'EBUSY', 'EACCES']);
 

@@ -1,4 +1,4 @@
-import { readdir, stat } from 'node:fs/promises';
+import { fsp } from './fs';
 import path from 'node:path';
 import {
   MAX_PROJECT_MANIFEST_BYTES,
@@ -15,6 +15,8 @@ import { LauncherError, errorMessage } from './errors';
 import { isNotFound, readJsonFile, writeJsonAtomic } from './fs-utils';
 import type { Logger } from './logger';
 import { readZipEntries } from './zip';
+
+const { readdir, stat } = fsp;
 
 const MAX_RECENT = 30;
 const MAX_DIRECTORY_PROJECTS = 300;

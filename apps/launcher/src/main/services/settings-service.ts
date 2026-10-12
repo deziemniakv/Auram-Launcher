@@ -1,4 +1,6 @@
-import { copyFile } from 'node:fs/promises';
+import { fsp } from './fs';
+
+const { copyFile } = fsp;
 import path from 'node:path';
 import {
   SETTINGS_SECTIONS,

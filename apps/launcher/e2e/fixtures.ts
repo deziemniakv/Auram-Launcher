@@ -189,5 +189,8 @@ export function photoPackage(version: string, marker: string): Promise<Buffer> {
       }),
     },
     { name: 'auram-photo.sh', content: `#!/bin/sh\necho "${version}" > "${marker}"\n` },
+    // Real Electron apps ship resources/app.asar. Electron's fs treats *.asar paths as
+    // archives, so the installer must write them as plain files.
+    { name: 'resources/app.asar', content: Buffer.from('not parsed by the launcher') },
   ]);
 }
