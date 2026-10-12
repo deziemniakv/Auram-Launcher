@@ -1,0 +1,13 @@
+/* Application-level styles that are not owned by a component. */
+
+.auram-boot {
+  display: grid;
+  place-content: center;
+  width: 100%;
+  height: 100vh;
+  padding: var(--space-8);
+}
+
+.auram-boot > * {
+  width: min(480px, 100%);
+}

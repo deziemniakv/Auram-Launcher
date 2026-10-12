@@ -1,0 +1,44 @@
+name: Release
+
+# Builds the Windows installer for a version tag and attaches it to a draft
+# GitHub release. A maintainer reviews and publishes the draft manually.
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Verify tag matches the launcher version
+        shell: bash
+        run: |
+          version=$(node -p "require('./apps/launcher/package.json').version")
+          if [ "v${version}" != "${GITHUB_REF_NAME}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match apps/launcher/package.json version ${version}" >&2
+            exit 1
+          fi
+
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+
+      - name: Build and publish draft release
+        working-directory: apps/launcher
+        run: pnpm run build && pnpm exec electron-builder --win --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Optional code signing. Without these secrets the installer is unsigned.
+          CSC_LINK: ${{ secrets.WINDOWS_CERTIFICATE }}
+          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}

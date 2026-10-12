@@ -1,0 +1,59 @@
+# Packaging configuration for Auram Launcher. See docs/release.md.
+appId: com.auram.launcher
+productName: Auram Launcher
+copyright: Copyright © 2026 Auram contributors
+artifactName: Auram-Launcher-${version}-${os}-${arch}.${ext}
+
+directories:
+  output: release/${version}
+  buildResources: build
+
+files:
+  - out/**/*
+  - package.json
+  - '!**/*.map'
+
+# Hardening: the packaged binary cannot be repurposed as a generic Node.js runtime.
+electronFuses:
+  runAsNode: false
+  enableCookieEncryption: true
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  enableEmbeddedAsarIntegrityValidation: true
+  onlyLoadAppFromAsar: true
+
+win:
+  icon: build/icon.ico
+  executableName: AuramLauncher
+  target:
+    - target: nsis
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Auram Launcher
+  artifactName: Auram-Launcher-Setup-${version}-${arch}.${ext}
+  # User data (settings, installed apps, projects) is never removed by the uninstaller.
+  deleteAppDataOnUninstall: false
+
+# Linux and macOS targets exist for local verification only; Windows is the supported platform.
+linux:
+  executableName: auram-launcher
+  icon: build/icon.png
+  target: [dir]
+  category: Graphics
+
+mac:
+  icon: build/icon.png
+  target: [dir]
+
+publish:
+  provider: github
+  owner: deziemniakv
+  repo: Auram-Launcher
+  releaseType: draft

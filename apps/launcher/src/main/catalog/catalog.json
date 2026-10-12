@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "apps": [
+    {
+      "id": "auram.photo",
+      "name": "Auram Photo",
+      "description": "Photo editing and graphic design.",
+      "descriptionTranslations": {
+        "pl": "Edycja zdjęć i projektowanie graficzne."
+      },
+      "category": "photo",
+      "availability": "in-development",
+      "releaseSource": {
+        "type": "github",
+        "owner": "deziemniakv",
+        "repo": "auram-photo",
+        "manifestAsset": "auram-release.json"
+      },
+      "projectExtensions": [".cproj"]
+    },
+    {
+      "id": "auram.video",
+      "name": "Auram Video",
+      "description": "Video editing.",
+      "descriptionTranslations": {
+        "pl": "Montaż wideo."
+      },
+      "category": "video",
+      "availability": "planned",
+      "releaseSource": null,
+      "projectExtensions": []
+    },
+    {
+      "id": "auram.motion",
+      "name": "Auram Motion",
+      "description": "Motion graphics and visual effects.",
+      "descriptionTranslations": {
+        "pl": "Grafika ruchoma i efekty wizualne."
+      },
+      "category": "motion",
+      "availability": "planned",
+      "releaseSource": null,
+      "projectExtensions": []
+    },
+    {
+      "id": "auram.3d",
+      "name": "Auram 3D",
+      "description": "3D creation.",
+      "descriptionTranslations": {
+        "pl": "Tworzenie grafiki 3D."
+      },
+      "category": "3d",
+      "availability": "planned",
+      "releaseSource": null,
+      "projectExtensions": []
+    }
+  ]
+}

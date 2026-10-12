@@ -1,0 +1,119 @@
+.shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  grid-template-rows: var(--topbar-height) minmax(0, 1fr);
+  height: 100vh;
+}
+
+/* Top bar: spans both columns; doubles as the window drag region. */
+.topbar {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  align-items: stretch;
+  background: var(--color-surface-0);
+  border-bottom: var(--border-width) solid var(--color-border-subtle);
+  -webkit-app-region: drag;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border-right: var(--border-width) solid var(--color-border-subtle);
+}
+
+:global(html[data-platform='darwin']) .brand {
+  padding-left: 80px;
+}
+
+.topbarMain {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: 0 var(--space-4);
+  /* Keep clear of the native window controls overlay (Windows, Linux). */
+  padding-right: calc(
+    100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw) + var(--space-4)
+  );
+}
+
+.activity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  max-width: 360px;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  -webkit-app-region: no-drag;
+}
+
+.activityText {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.activityBar {
+  flex: none;
+  width: 96px;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--color-surface-0);
+  border-right: var(--border-width) solid var(--color-border-subtle);
+}
+
+.navGroup {
+  display: grid;
+  padding: var(--space-3) 0;
+}
+
+.navBottom {
+  margin-top: auto;
+  border-top: var(--border-width) solid var(--color-border-subtle);
+}
+
+.sidebarFooter {
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+}
+
+.main {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+.content {
+  display: grid;
+  gap: var(--space-10);
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--content-padding);
+}
+
+.skipLink {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: var(--z-toast);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  transform: translateY(-200%);
+}
+
+.skipLink:focus-visible {
+  transform: none;
+}

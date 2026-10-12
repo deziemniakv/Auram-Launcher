@@ -1,0 +1,138 @@
+.card {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-5);
+  background: var(--color-surface-1);
+  border: var(--border-width) solid var(--color-border-subtle);
+}
+
+.head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  background: var(--color-surface-3);
+  border: var(--border-width) solid var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.icon svg {
+  width: var(--icon-lg);
+  height: var(--icon-lg);
+}
+
+.icon.dim {
+  color: var(--color-text-tertiary);
+}
+
+.titleGroup {
+  display: grid;
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.category {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.description {
+  color: var(--color-text-secondary);
+}
+
+.meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-4);
+  align-content: start;
+  margin: 0;
+  padding-top: var(--space-4);
+  border-top: var(--border-width) solid var(--color-border-subtle);
+}
+
+.meta dt {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.meta dd {
+  margin: 2px 0 0;
+  overflow: hidden;
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  text-overflow: ellipsis;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.problem {
+  color: var(--color-warning);
+}
+
+.error {
+  color: var(--color-danger);
+  user-select: text;
+}
+
+.progress {
+  display: grid;
+  gap: var(--space-2);
+  grid-column: 1 / -1;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* Compact row variant used on Home. */
+.row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-1);
+  border: var(--border-width) solid var(--color-border-subtle);
+}
+
+.rowText {
+  display: grid;
+  min-width: 0;
+}
+
+.rowMeta {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
+}

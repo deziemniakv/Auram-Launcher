@@ -1,0 +1,56 @@
+[
+  {
+    "name": "electron",
+    "version": "44.7.0",
+    "license": "MIT",
+    "repository": "https://github.com/electron/electron"
+  },
+  {
+    "name": "lucide-react",
+    "version": "1.55.0",
+    "license": "ISC",
+    "repository": "https://github.com/lucide-icons/lucide"
+  },
+  {
+    "name": "pend",
+    "version": "1.2.0",
+    "license": "MIT",
+    "repository": "https://github.com/andrewrk/node-pend"
+  },
+  {
+    "name": "react",
+    "version": "19.3.0",
+    "license": "MIT",
+    "repository": "https://github.com/react/react"
+  },
+  {
+    "name": "react-dom",
+    "version": "19.3.0",
+    "license": "MIT",
+    "repository": "https://github.com/react/react"
+  },
+  {
+    "name": "scheduler",
+    "version": "0.28.0",
+    "license": "MIT",
+    "repository": "https://github.com/react/react"
+  },
+  {
+    "name": "yauzl",
+    "version": "3.4.0",
+    "license": "MIT",
+    "repository": "https://github.com/thejoshwolfe/yauzl"
+  },
+  {
+    "name": "zod",
+    "version": "4.6.6",
+    "license": "MIT",
+    "repository": "https://github.com/colinhacks/zod"
+  },
+  {
+    "name": "zustand",
+    "version": "5.0.15",
+    "license": "MIT",
+    "repository": "https://github.com/pmndrs/zustand"
+  }
+]
