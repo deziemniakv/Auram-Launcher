@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { mkdir, open, readdir, rm } from 'node:fs/promises';
+import { fsp } from './fs';
 import path from 'node:path';
 import type { Artifact, InstallationRecord } from '@auram/app-manifest';
 import { compareVersions, isValidVersion } from '@auram/app-manifest';
@@ -9,6 +9,8 @@ import { appLayout, inspectVersionDir } from './installed-apps';
 import type { Logger } from './logger';
 import { trustedFetch, type FetchLike, type TrustPolicy } from './net';
 import { extractZip } from './zip';
+
+const { mkdir, open, readdir, rm } = fsp;
 
 export type InstallPhase =
   | { phase: 'downloading'; receivedBytes: number; totalBytes: number }
@@ -135,6 +137,8 @@ export async function installVersion(
   const finalDir = layout.versionDir(version);
   let displaced: string | null = null;
 
+  await removeLeftovers(layout.versionsDir, deps.logger);
+
   const throwIfAborted = () => {
     if (signal?.aborted) throw new LauncherError('cancelled', 'The installation was cancelled.');
   };
@@ -215,6 +219,28 @@ export async function installVersion(
   } finally {
     await rm(download, { force: true }).catch(() => {});
     await rm(staging, { recursive: true, force: true }).catch(() => {});
+  }
+}
+
+/**
+ * Removes staging folders left behind by an interrupted or failed install (for
+ * example after a crash). They are never active installations.
+ */
+async function removeLeftovers(versionsDir: string, logger: Logger): Promise<void> {
+  let names: string[];
+  try {
+    names = (await readdir(versionsDir, { withFileTypes: true }))
+      .filter((entry) => entry.isDirectory() && entry.name.startsWith('.staging-'))
+      .map((entry) => entry.name);
+  } catch (error) {
+    if (isNotFound(error)) return;
+    throw error;
+  }
+  for (const name of names) {
+    await rm(path.join(versionsDir, name), { recursive: true, force: true }).then(
+      () => logger.info('installer', `Removed leftover ${name}`),
+      (error: unknown) => logger.warn('installer', `Could not remove leftover ${name}`, error),
+    );
   }
 }
 

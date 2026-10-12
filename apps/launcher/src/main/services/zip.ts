@@ -1,11 +1,12 @@
-import { createWriteStream } from 'node:fs';
-import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { Transform, Writable } from 'node:stream';
 import yauzl from 'yauzl';
 import { LauncherError } from './errors';
 import { isWithin } from './fs-utils';
+import { createWriteStream, fsp } from './fs';
+
+const { mkdir } = fsp;
 
 type ZipFile = yauzl.ZipFile;
 type Entry = yauzl.Entry;

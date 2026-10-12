@@ -1,4 +1,4 @@
-import { readdir, stat } from 'node:fs/promises';
+import { fsp } from './fs';
 import path from 'node:path';
 import {
   AppDescriptorSchema,
@@ -10,6 +10,8 @@ import {
   type InstallationRecord,
 } from '@auram/app-manifest';
 import { isNotFound, isWithin, readJsonFile } from './fs-utils';
+
+const { readdir, stat } = fsp;
 
 export const DESCRIPTOR_FILE = 'auram-app.json';
 export const CURRENT_FILE = 'current.json';

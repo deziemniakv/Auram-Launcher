@@ -37,6 +37,8 @@ export default defineConfig({
     build: {
       rollupOptions: {
         input: { index: resolve(__dirname, 'src/main/index.ts') },
+        // Provided by Electron at runtime (unpatched fs; see src/main/services/fs.ts).
+        external: ['original-fs'],
       },
     },
   },

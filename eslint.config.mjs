@@ -55,4 +55,21 @@ export default tseslint.config(
     files: ['apps/launcher/src/renderer/**/*.test.ts'],
     rules: { 'no-restricted-imports': 'off' },
   },
+  {
+    // Electron's patched fs treats *.asar files as directories, which breaks installing
+    // Electron-based apps. Main-process code must use services/fs.ts (original-fs).
+    files: ['apps/launcher/src/main/**/*.ts'],
+    ignores: ['apps/launcher/src/main/**/*.test.ts', 'apps/launcher/src/main/test-utils.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: ['fs', 'fs/promises', 'node:fs', 'node:fs/promises'].map((name) => ({
+            name,
+            message: 'Use services/fs.ts: Electron patches fs for *.asar paths.',
+          })),
+        },
+      ],
+    },
+  },
 );

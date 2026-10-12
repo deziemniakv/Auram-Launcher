@@ -218,6 +218,14 @@ describe('installVersion', () => {
     expect(await discoverInstalledApp(appsDir, APP, 'linux')).toBeNull();
   });
 
+  it('removes staging folders left by an interrupted install', async () => {
+    const leftover = path.join(appsDir, APP, 'versions', '.staging-1.0.0-deadbeef', 'resources');
+    await mkdir(leftover, { recursive: true });
+    await writeFile(path.join(leftover, 'app.asar'), 'partial');
+    await install('1.0.0', await publish('1.0.0', await packageFor('1.0.0')));
+    expect(await readdir(path.join(appsDir, APP, 'versions'))).toEqual(['1.0.0']);
+  });
+
   it('repairs an existing installation of the same version', async () => {
     const artifact = await publish('1.0.0', await packageFor('1.0.0'));
     await install('1.0.0', artifact);

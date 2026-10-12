@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Installing an application failed with "Invalid package …\\resources\\app.asar". Electron treats
+  `*.asar` files as archives in its patched `fs`; the launcher now uses Electron's unpatched
+  `original-fs` for all file operations, so Electron-based applications such as Auram Photo
+  install, update and uninstall correctly.
+- Staging folders left behind by an interrupted installation are removed on the next install.
+
 ## [0.1.0] - Unreleased
 
 First development version.
