@@ -1,44 +1,221 @@
 name: Release
 
-# Builds the Windows installer for a version tag and attaches it to a draft
-# GitHub release. A maintainer reviews and publishes the draft manually.
+# Builds the Windows installer and attaches it, together with SHA256SUMS.txt, to a
+# draft GitHub release, and optionally publishes that draft after verifying its files.
+#
+# Start it from Actions → Release → Run workflow on main (releases the version in
+# apps/launcher/package.json), or by pushing a tag v<version>.
+#
+# The workflow never deletes, moves or overwrites tags or releases:
+# - no tag yet:                 build main, create the tag, create a draft release
+# - tag exists, no release:     build the tagged commit, create a draft release
+# - draft or published release: nothing to build
+# With "publish" ticked, a draft is published only if its installer matches its checksum.
 on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the draft release after verifying its files
+        type: boolean
+        default: false
   push:
     tags: ['v*.*.*']
 
 permissions:
   contents: write
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
-  windows:
-    runs-on: windows-latest
+  prepare:
+    name: Inspect tag and release
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      version: ${{ steps.state.outputs.version }}
+      tag: ${{ steps.state.outputs.tag }}
+      build: ${{ steps.state.outputs.build }}
+      build_ref: ${{ steps.state.outputs.build_ref }}
+      create_tag: ${{ steps.state.outputs.create_tag }}
+      release: ${{ steps.state.outputs.release }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Determine what to do
+        id: state
+        shell: bash
+        run: |
+          set -euo pipefail
+          summary() { echo "$1" | tee -a "$GITHUB_STEP_SUMMARY"; }
+
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+              echo "::error::Run the release workflow on main (it was started on ${GITHUB_REF})."
+              exit 1
+            fi
+            version=$(node -p "require('./apps/launcher/package.json').version")
+            tag="v${version}"
+          else
+            tag="${GITHUB_REF_NAME}"
+            version="${tag#v}"
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          summary "### Auram Launcher ${version}"
+
+          # Existing tag: always build exactly the tagged commit, and only if it is
+          # part of main and carries the matching version.
+          if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+            ref=$(git rev-parse "${tag}^{commit}")
+            if ! git merge-base --is-ancestor "${ref}" origin/main; then
+              echo "::error::Tag ${tag} points to ${ref}, which is not on main. Not releasing it."
+              exit 1
+            fi
+            tagged_version=$(git show "${ref}:apps/launcher/package.json" | node -p "JSON.parse(require('fs').readFileSync(0)).version")
+            if [ "${tagged_version}" != "${version}" ]; then
+              echo "::error::Tag ${tag} points to a commit with version ${tagged_version}."
+              exit 1
+            fi
+            summary "- Tag \`${tag}\` exists at \`${ref}\`."
+            echo "create_tag=false" >> "$GITHUB_OUTPUT"
+          else
+            if [ "${GITHUB_EVENT_NAME}" != "workflow_dispatch" ]; then
+              echo "::error::Tag ${tag} not found."
+              exit 1
+            fi
+            ref="${GITHUB_SHA}"
+            summary "- Tag \`${tag}\` does not exist yet; it will be created at \`${ref}\` after a successful build."
+            echo "create_tag=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "build_ref=${ref}" >> "$GITHUB_OUTPUT"
+
+          # gh finds draft releases by tag as well as published ones.
+          if json=$(gh release view "${tag}" --json isDraft,assets 2>/dev/null); then
+            if [ "$(echo "${json}" | jq -r .isDraft)" = "true" ]; then release=draft; else release=published; fi
+            summary "- Release for \`${tag}\` exists (${release}) with assets: $(echo "${json}" | jq -r '[.assets[].name] | join(", ")')."
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          else
+            release=none
+            summary "- No release for \`${tag}\` yet; building one."
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "release=${release}" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build and create draft release
+    needs: prepare
+    if: needs.prepare.outputs.build == 'true'
+    runs-on: windows-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.build_ref }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-
-      - name: Verify tag matches the launcher version
-        shell: bash
-        run: |
-          version=$(node -p "require('./apps/launcher/package.json').version")
-          if [ "v${version}" != "${GITHUB_REF_NAME}" ]; then
-            echo "Tag ${GITHUB_REF_NAME} does not match apps/launcher/package.json version ${version}" >&2
-            exit 1
-          fi
-
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
 
-      - name: Build and publish draft release
-        working-directory: apps/launcher
-        run: pnpm run build && pnpm exec electron-builder --win --publish always
+      - name: Build installer
+        run: pnpm --filter @auram/launcher package:win
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Optional code signing. Without these secrets the installer is unsigned.
           CSC_LINK: ${{ secrets.WINDOWS_CERTIFICATE }}
           CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+
+      - name: Write checksums
+        shell: bash
+        working-directory: apps/launcher/release/${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+          sha256sum "Auram-Launcher-Setup-${{ needs.prepare.outputs.version }}-x64.exe" > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      # Created only after the build succeeded, so a failed build never leaves a tag.
+      # Tags pushed with GITHUB_TOKEN do not start this workflow again.
+      - name: Create tag
+        if: needs.prepare.outputs.create_tag == 'true'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ needs.prepare.outputs.tag }}" "${{ needs.prepare.outputs.build_ref }}" \
+            -m "Auram Launcher ${{ needs.prepare.outputs.version }}"
+          git push origin "${{ needs.prepare.outputs.tag }}"
+
+      - name: Create draft release
+        shell: bash
+        run: |
+          version="${{ needs.prepare.outputs.version }}"
+          tag="${{ needs.prepare.outputs.tag }}"
+          dir="apps/launcher/release/${version}"
+          prerelease=""
+          if [[ "${version}" == *-* ]]; then prerelease="--prerelease"; fi
+          gh release create "${tag}" --draft ${prerelease} --verify-tag --title "Auram Launcher ${version}" \
+            --notes "See [CHANGELOG.md](https://github.com/${GITHUB_REPOSITORY}/blob/main/CHANGELOG.md)." \
+            "${dir}/Auram-Launcher-Setup-${version}-x64.exe" "${dir}/SHA256SUMS.txt"
+
+  publish:
+    name: Verify and publish
+    needs: [prepare, build]
+    # Runs after a successful build, or directly when a draft already existed.
+    if: >-
+      always() && github.event_name == 'workflow_dispatch' && inputs.publish &&
+      needs.prepare.result == 'success' &&
+      (needs.build.result == 'success' || needs.build.result == 'skipped')
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Verify release files
+        id: verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${{ needs.prepare.outputs.tag }}"
+          version="${{ needs.prepare.outputs.version }}"
+          installer="Auram-Launcher-Setup-${version}-x64.exe"
+          json=$(gh release view "${tag}" --repo "${GITHUB_REPOSITORY}" --json isDraft,assets)
+          if [ "$(echo "${json}" | jq -r .isDraft)" != "true" ]; then
+            echo "Release ${tag} is already published; nothing to do." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "draft=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "draft=true" >> "$GITHUB_OUTPUT"
+          for name in "${installer}" SHA256SUMS.txt; do
+            if ! echo "${json}" | jq -e --arg name "${name}" '.assets | any(.name == $name)' >/dev/null; then
+              echo "::error::Draft ${tag} has no ${name}. Not publishing it."
+              exit 1
+            fi
+          done
+          mkdir release-assets
+          gh release download "${tag}" --repo "${GITHUB_REPOSITORY}" --dir release-assets \
+            --pattern "${installer}" --pattern SHA256SUMS.txt
+          cd release-assets
+          if [ "$(head -c 2 "${installer}")" != "MZ" ]; then
+            echo "::error::${installer} is not a Windows executable. Not publishing it."
+            exit 1
+          fi
+          if ! grep -q " \*\?${installer}\$" SHA256SUMS.txt; then
+            echo "::error::SHA256SUMS.txt does not list ${installer}. Not publishing it."
+            exit 1
+          fi
+          sha256sum -c SHA256SUMS.txt | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish release
+        if: steps.verify.outputs.draft == 'true'
+        shell: bash
+        run: |
+          gh release edit "${{ needs.prepare.outputs.tag }}" --repo "${GITHUB_REPOSITORY}" --draft=false
+          echo "Published ${{ needs.prepare.outputs.tag }}." | tee -a "$GITHUB_STEP_SUMMARY"
