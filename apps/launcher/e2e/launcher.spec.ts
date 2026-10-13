@@ -2,11 +2,14 @@ import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Page } from '@playwright/test';
+import packageJson from '../package.json';
 import { createSandbox, installFakePhoto, launch, writeProject, type Sandbox } from './fixtures';
 
 /** Clicks a sidebar entry. */
 const go = (window: Page, label: string) =>
   window.getByRole('navigation').getByRole('button', { name: label, exact: true }).click();
+
+const launcherVersion = packageJson.version;
 
 let sandbox: Sandbox;
 
@@ -39,7 +42,7 @@ test('starts on Home and navigates every section', async () => {
 
     await nav.getByRole('button', { name: 'Settings' }).click();
     await expect(window.getByRole('heading', { name: 'Settings', level: 1 })).toBeVisible();
-    await expect(window.getByText('0.1.0').first()).toBeVisible();
+    await expect(window.getByText(launcherVersion).first()).toBeVisible();
   } finally {
     await app.close();
   }

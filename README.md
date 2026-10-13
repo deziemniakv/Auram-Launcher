@@ -15,30 +15,33 @@ one click away. It is the first piece of a larger ecosystem: the applications th
 starting with **Auram Photo** — are developed as separate projects and integrate with the
 launcher through a small, documented contract.
 
-> **Status: early development (0.1.0).** The launcher is functional, but no Auram application
-> has published a release yet, so there is nothing to install from the catalog today. The
-> launcher shows this honestly rather than simulating it. See [What works today](#what-works-today).
+> **Status: early development (0.1.1).** The launcher is functional and installs
+> **Auram Photo** from its published release. Other catalog entries show honestly that they
+> have no release yet. See [What works today](#what-works-today).
 
 ## What works today
 
-| Area                                                                  | Status                                                                                            |
-| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Home, Applications, Projects, Updates, Settings                       | Implemented                                                                                       |
-| Settings persistence (with recovery from corrupted files)             | Implemented, tested across restarts                                                               |
-| English and Polish interface                                          | Implemented                                                                                       |
-| Discovering installed applications                                    | Implemented (release installs and manual developer builds)                                        |
-| Launching installed applications, optionally with a project           | Implemented, end-to-end tested                                                                    |
-| Release discovery from GitHub Releases                                | Implemented; Auram Photo has no published release yet                                             |
-| Download → SHA-256 verification → staged install → atomic switch-over | Implemented and tested against a local server; not yet exercised against a real published release |
-| Project discovery and recent projects (`.cproj` metadata, thumbnails) | Implemented                                                                                       |
-| Launcher self-update                                                  | Detects new launcher releases and links to them; installation is manual                           |
-| Windows installer (NSIS)                                              | Configured; built by CI on Windows                                                                |
-| Code signing                                                          | Not configured (installers are unsigned)                                                          |
+| Area                                                                  | Status                                                                                |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Home, Applications, Projects, Updates, Settings                       | Implemented                                                                           |
+| Settings persistence (with recovery from corrupted files)             | Implemented, tested across restarts                                                   |
+| English and Polish interface                                          | Implemented                                                                           |
+| Discovering installed applications                                    | Implemented (release installs and manual developer builds)                            |
+| Launching installed applications, optionally with a project           | Implemented, end-to-end tested                                                        |
+| Release discovery from GitHub Releases                                | Implemented                                                                           |
+| Download → SHA-256 verification → staged install → atomic switch-over | Implemented; tested against a local server and with the published Auram Photo release |
+| Project discovery and recent projects (`.cproj` metadata, thumbnails) | Implemented                                                                           |
+| Launcher self-update                                                  | Detects new launcher releases and links to them; installation is manual               |
+| Windows installer (NSIS)                                              | Configured; built by CI on Windows                                                    |
+| Code signing                                                          | Not configured (installers are unsigned)                                              |
 
 ## Installing
 
-Windows installers will be attached to [GitHub Releases](https://github.com/deziemniakv/Auram-Launcher/releases)
-once the first version is published. Until then, build from source.
+Download `Auram-Launcher-Setup-<version>-x64.exe` from
+[GitHub Releases](https://github.com/deziemniakv/Auram-Launcher/releases) and run it. The installer
+is not code-signed yet, so Windows SmartScreen may warn on first run; `SHA256SUMS.txt` in the same
+release lists the installer's checksum. Settings, installed applications and projects are stored
+outside the installation folder, so upgrading or uninstalling the launcher leaves them in place.
 
 ## Development
 
